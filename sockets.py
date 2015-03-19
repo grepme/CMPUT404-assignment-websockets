@@ -71,6 +71,7 @@ myWorld = World()
 
 def set_listener(entity, data):
     """do something with the update !"""
+    pass
 
 
 myWorld.add_set_listener(set_listener)
