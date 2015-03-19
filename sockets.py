@@ -23,6 +23,10 @@ import time
 import json
 import os
 
+from gevent import monkey
+
+monkey.patch_all()
+
 app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
@@ -30,6 +34,7 @@ app.debug = True
 
 class World:
     """Already done for us"""
+
     def __init__(self):
         self.clear()
         # we've got listeners now!
@@ -38,13 +43,18 @@ class World:
         # Set the space to a dictionary
         self.space = {}
 
+        # Lets keep a list of websocket clients connected to this world
+        self.clients = []
+
     def add_set_listener(self, listener):
         self.listeners.append(listener)
 
     def update(self, entity, key, value):
+        print "Called update!"
         entry = self.space.get(entity, dict())
         entry[key] = value
         self.space[entity] = entry
+        print "Calling listeners!"
         self.update_listeners(entity)
 
     def set(self, entity, data):
@@ -54,6 +64,7 @@ class World:
     def update_listeners(self, entity):
         """update the set listeners"""
         for listener in self.listeners:
+            print "1 listener!"
             listener(entity, self.get(entity))
 
     def clear(self):
@@ -66,12 +77,32 @@ class World:
         return self.space
 
 
+class Client:
+    """List of all websocket clients in a queue and their messages"""
+
+    def __init__(self):
+        self.queue = queue.Queue()
+
+    def put(self, v):
+        self.queue.put_nowait(v)
+
+    def get(self):
+        return self.queue.get()
+
+
 myWorld = World()
 
 
 def set_listener(entity, data):
     """do something with the update !"""
-    pass
+
+    # For each client, send them the update
+    print "Looking for clients!"
+    for client in myWorld.clients:
+        print "1 Client!"
+        sending = {entity: data}
+        print "sending: {}".format(sending)
+        client.put(sending)
 
 
 myWorld.add_set_listener(set_listener)
@@ -85,16 +116,43 @@ def hello():
 
 def read_ws(ws, client):
     """A greenlet function that reads from the websocket and updates the world"""
-    # XXX: TODO IMPLEMENT ME
-    return None
+    try:
+        while True:
+            msg = ws.receive()
+            if msg is not None:
+                packet = json.loads(msg)
+                print "WS RECEIVE: {}".format(packet)
+                # For each entity in the packet, update that entity and every key
+                for entity, entity_data in packet.items():
+                    print "HO BOY"
+                    for key, value in entity_data.items():
+                        print "Key: {} Updating to: {}".format(key, value)
+                        myWorld.update(entity, key, value)
+                print "FUCK"
+            else:
+                break
+    except:
+        pass
 
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
     """Fufill the websocket URL of /subscribe, every update notify the
        websocket and read updates from the websocket """
-    # XXX: TODO IMPLEMENT ME
-    return None
+    client = Client()
+    myWorld.clients.append(client)
+    g = gevent.spawn(read_ws, ws, client)
+    try:
+        while True:
+            # block here
+            msg = client.get()
+            print "SENDING MESSAGE: {}".format(msg)
+            ws.send(json.dumps(msg))
+    except Exception as e:  # WebSocketError as e:
+        print "WS Error %s" % e
+    finally:
+        myWorld.clients.remove(client)
+        gevent.kill(g)
 
 
 def flask_post_json():

@@ -44,6 +44,13 @@ debug("Test");
 
 world = {};
 
+//All the websockets code!
+function sendWebsocketsData(entity, data){
+    var sending_data = {};
+    sending_data[entity] = data;
+    socket.send(JSON.stringify(sending_data));
+}
+
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
@@ -122,9 +129,11 @@ function getPosition(e) {
 }
 
 function addEntity(entity, data) {
-    world[entity] = data;
-    drawNextFrame(); // (but should we?)
+    //world[entity] = data;
+    //drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+    console.log("SENDING ENTITY!");
+    sendWebsocketsData(entity, data);
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -254,6 +263,7 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+        console.log("Totally connected!");
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -261,7 +271,19 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            console.log("GOT: " + msg.data);
+            //XXX: TODO What are you going to do here?
+            var entities = JSON.parse(msg.data);
+
+            // For each entity sent to us, update the world
+            for (var entity in entities){
+                if (entities.hasOwnProperty(entity)){
+                    console.log(entity);
+                    world[entity] = {'x': entities[entity]['x'], 'y': entities[entity]['y'],
+                        'colour': entities[entity]['colour'], 'radius': entities[entity]['radius']};
+                    drawNextFrame();
+                }
+            }
         } catch (e) {
             alert("socket on message: " + e);
         }
