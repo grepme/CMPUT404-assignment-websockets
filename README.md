@@ -10,7 +10,7 @@ Make a shared state Websockets drawing program
 Prereqs
 =======
 
-pip install flask-sockets
+pip install Flask-Sockets
 
 pip install ws4py
 
@@ -58,3 +58,13 @@ Contributors
 
 * Mark Galloway
 * Abram Hindle
+* Kyle Richelhoff
+
+Additional Resources Utilized
+=============================
+
+* https://github.com/kennethreitz/flask-sockets
+* https://developer.mozilla.org/en-US/
+* Specific Mozilla Example: https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Object/hasOwnProperty 
+* Abram Hindle's WebSocketsExample: https://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py (Apache 2 License)
+* http://www.gevent.org/gevent.monkey.html
