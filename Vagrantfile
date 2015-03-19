@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "DebianWheezy7.3.64x"
+  config.vm.box = "chef/debian-7.4"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -23,6 +23,7 @@ Vagrant.configure(2) do |config|
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "forwarded_port", guest: 8000, host: 9000
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -66,9 +67,10 @@ Vagrant.configure(2) do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
     sudo apt-get update
-    sudo apt-get install -y python python-pip
+    sudo apt-get install -y python python-dev python-pip
     sudo pip install flask
-    sudo pip install flask-sockets
+    sudo pip install gevent
+    sudo pip install Flask-Sockets
     sudo pip install ws4py
     sudo pip install gunicorn
     sudo bash /vagrant/run.sh

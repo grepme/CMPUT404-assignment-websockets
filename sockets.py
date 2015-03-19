@@ -29,10 +29,14 @@ app.debug = True
 
 
 class World:
+    """Already done for us"""
     def __init__(self):
         self.clear()
         # we've got listeners now!
         self.listeners = list()
+
+        # Set the space to a dictionary
+        self.space = {}
 
     def add_set_listener(self, listener):
         self.listeners.append(listener)
@@ -48,7 +52,7 @@ class World:
         self.update_listeners(entity)
 
     def update_listeners(self, entity):
-        '''update the set listeners'''
+        """update the set listeners"""
         for listener in self.listeners:
             listener(entity, self.get(entity))
 
@@ -66,7 +70,7 @@ myWorld = World()
 
 
 def set_listener(entity, data):
-    ''' do something with the update ! '''
+    """do something with the update !"""
 
 
 myWorld.add_set_listener(set_listener)
@@ -74,30 +78,30 @@ myWorld.add_set_listener(set_listener)
 
 @app.route('/')
 def hello():
-    '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    """Return something coherent here.. perhaps redirect to /static/index.html"""
+    return flask.redirect('/static/index.html', 301)
 
 
 def read_ws(ws, client):
-    '''A greenlet function that reads from the websocket and updates the world'''
+    """A greenlet function that reads from the websocket and updates the world"""
     # XXX: TODO IMPLEMENT ME
     return None
 
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
-    '''Fufill the websocket URL of /subscribe, every update notify the
-       websocket and read updates from the websocket '''
+    """Fufill the websocket URL of /subscribe, every update notify the
+       websocket and read updates from the websocket """
     # XXX: TODO IMPLEMENT ME
     return None
 
 
 def flask_post_json():
-    '''Ah the joys of frameworks! They do so much work for you
-       that they get in the way of sane operation!'''
-    if (request.json != None):
+    """Ah the joys of frameworks! They do so much work for you
+       that they get in the way of sane operation!"""
+    if request.json is not None:
         return request.json
-    elif (request.data != None and request.data != ''):
+    elif request.data is not None and request.data != '':
         return json.loads(request.data)
     else:
         return json.loads(request.form.keys()[0])
@@ -105,32 +109,37 @@ def flask_post_json():
 
 @app.route("/entity/<entity>", methods=['POST', 'PUT'])
 def update(entity):
-    '''update the entities via this interface'''
-    return None
+    """update the entities via this interface"""
+    params = flask_post_json()
+    for key, value in params.items():
+        myWorld.update(entity, key, value)
+    # Return the same params that were posted to us as JSON?
+    return flask.jsonify(params)
 
 
 @app.route("/world", methods=['POST', 'GET'])
 def world():
-    '''you should probably return the world here'''
-    return None
+    """you should probably return the world here"""
+    return flask.jsonify(myWorld.world())
 
 
 @app.route("/entity/<entity>")
 def get_entity(entity):
-    '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    """This is the GET version of the entity interface, return a representation of the entity"""
+    return flask.jsonify(myWorld.get(entity))
 
 
 @app.route("/clear", methods=['POST', 'GET'])
 def clear():
-    '''Clear the world out!'''
-    return None
+    """Clear the world out!"""
+    myWorld.clear()
+    return flask.jsonify({'status': True})
 
 
 if __name__ == "__main__":
-    ''' This doesn't work well anymore:
+    """ This doesn't work well anymore:
         pip install gunicorn
         and run
         gunicorn -k flask_sockets.worker sockets:app
-    '''
+    """
     app.run()
