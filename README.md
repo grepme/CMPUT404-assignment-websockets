@@ -65,6 +65,13 @@ Additional Resources Utilized
 
 * https://github.com/kennethreitz/flask-sockets
 * https://developer.mozilla.org/en-US/
-* Specific Mozilla Example: https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Object/hasOwnProperty 
+* https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Object/hasOwnProperty
+* https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+* https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_text
+* https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Using_images
 * Abram Hindle's WebSocketsExample: https://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py (Apache 2 License)
 * http://www.gevent.org/gevent.monkey.html
+
+Doge image provided by:
+
+* http://dogeforall.biz/

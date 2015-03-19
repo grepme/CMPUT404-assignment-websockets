@@ -35,6 +35,9 @@ var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 var wscounter = 0;
 var socket;
+var status = false;
+var img = new Image();
+img.src = '/static/doge.png';
 
 function debug(str) {
     var debugDiv = document.getElementById('debug');
@@ -51,9 +54,13 @@ function sendWebsocketsData(entity, data){
     socket.send(JSON.stringify(sending_data));
 }
 
-//XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
+        //Drawing doge rather than circle
+        var x = entity["x"];
+        var y = entity["y"];
+        drawImage(img, x - 32, y - 34);
+    /*
         beginPath();                
         lineWidth = 3;
         var x = entity["x"];
@@ -62,7 +69,8 @@ function drawCircle(context,entity) {
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
         arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        stroke();
+     */
     }
 }
 
@@ -92,6 +100,11 @@ function renderFrame() {
         var entity = world[key];
         drawCircle(context,prepEntity(entity));
     }
+
+    //We need to draw the status of the server on the canvas
+    context.fillStyle = "blue";
+    context.font = "bold 24px Arial";
+    context.fillText("Server Status: " + status, 0, H-20);
 }
 
 var drawNext = true;
@@ -132,7 +145,6 @@ function addEntity(entity, data) {
     //world[entity] = data;
     //drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
-    console.log("SENDING ENTITY!");
     sendWebsocketsData(entity, data);
 }
 var counter = 0;
@@ -238,17 +250,17 @@ mouse = (function() {
 })();
 
 // Add the application specific mouse listeners!
-//XXX: TODO Make these prettier!
+// Replaced with doge images instead
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'purple'});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'white'});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
+    addEntityWithoutName({'x':x,'y':y,'colour':'pink',
                           'radius':10});
 });
 
@@ -261,24 +273,29 @@ function update() {
 function wsSetup() {
     var url = "ws://"+host+"/subscribe";   
     socket = new WebSocket(url);
+
+    // Initially when the connection is opened
     socket.onopen = function() {
-        //XXX: TODO What are you going to do here?
-        console.log("Totally connected!");
+        //Going to update the status and say we are connected
+        status = true;
     };
+
+    // Any errors
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
     };
+
+    // For every message recieved
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            console.log("GOT: " + msg.data);
-            //XXX: TODO What are you going to do here?
+
+            //To Javascript Object
             var entities = JSON.parse(msg.data);
 
             // For each entity sent to us, update the world
             for (var entity in entities){
                 if (entities.hasOwnProperty(entity)){
-                    console.log(entity);
                     world[entity] = {'x': entities[entity]['x'], 'y': entities[entity]['y'],
                         'colour': entities[entity]['colour'], 'radius': entities[entity]['radius']};
                     drawNextFrame();
@@ -287,16 +304,28 @@ function wsSetup() {
         } catch (e) {
             alert("socket on message: " + e);
         }
-    }; 
+    };
+    // If the socket is forcefully closed or gracefully
+    socket.onclose = function(msg){
+        status = false;
+    }
+}
+
+function checkSocket(){
+    if (socket.readyState == 3){
+        // Socket was closed for some reason
+        if (status != false){
+             status = false;
+             drawNextFrame();
+        }
+    }
 }
 
 wsSetup();
 
-
-
-
 // 30 frames per second
 setInterval( update, 1000/30.0);
+setInterval(checkSocket, 100);
 
 
     </script>

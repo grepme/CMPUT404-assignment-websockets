@@ -50,11 +50,9 @@ class World:
         self.listeners.append(listener)
 
     def update(self, entity, key, value):
-        print "Called update!"
         entry = self.space.get(entity, dict())
         entry[key] = value
         self.space[entity] = entry
-        print "Calling listeners!"
         self.update_listeners(entity)
 
     def set(self, entity, data):
@@ -64,7 +62,6 @@ class World:
     def update_listeners(self, entity):
         """update the set listeners"""
         for listener in self.listeners:
-            print "1 listener!"
             listener(entity, self.get(entity))
 
     def clear(self):
@@ -97,11 +94,8 @@ def set_listener(entity, data):
     """do something with the update !"""
 
     # For each client, send them the update
-    print "Looking for clients!"
     for client in myWorld.clients:
-        print "1 Client!"
         sending = {entity: data}
-        print "sending: {}".format(sending)
         client.put(sending)
 
 
@@ -121,14 +115,10 @@ def read_ws(ws, client):
             msg = ws.receive()
             if msg is not None:
                 packet = json.loads(msg)
-                print "WS RECEIVE: {}".format(packet)
                 # For each entity in the packet, update that entity and every key
                 for entity, entity_data in packet.items():
-                    print "HO BOY"
                     for key, value in entity_data.items():
-                        print "Key: {} Updating to: {}".format(key, value)
                         myWorld.update(entity, key, value)
-                print "FUCK"
             else:
                 break
     except:
@@ -146,7 +136,6 @@ def subscribe_socket(ws):
         while True:
             # block here
             msg = client.get()
-            print "SENDING MESSAGE: {}".format(msg)
             ws.send(json.dumps(msg))
     except Exception as e:  # WebSocketError as e:
         print "WS Error %s" % e
